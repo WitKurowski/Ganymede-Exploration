@@ -37,7 +37,7 @@ public class ExplorationManager extends Manager {
 	/**
 	 * The maximum number of commands that any given {@link Drone} should be given.
 	 */
-	private static final int MAXIMUM_COMMAND_BATCH_SIZE = 5;
+	public static final int MAXIMUM_COMMAND_BATCH_SIZE = 5;
 
 	/**
 	 * Returns the singleton instance of {@link ExplorationManager}.
