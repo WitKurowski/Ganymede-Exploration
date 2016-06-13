@@ -80,7 +80,7 @@ public class ExplorationManager extends Manager {
 					throws IOException, ServerException {
 		final Map<String, CommandResult> commandIdCommandResults;
 
-		if (commandIdCommandContents.size() > 5) {
+		if (commandIdCommandContents.size() > ExplorationManager.MAXIMUM_COMMAND_BATCH_SIZE) {
 			throw new IllegalArgumentException(
 					String.format("The maximum number of commands that can be batched is %s",
 							ExplorationManager.MAXIMUM_COMMAND_BATCH_SIZE));
