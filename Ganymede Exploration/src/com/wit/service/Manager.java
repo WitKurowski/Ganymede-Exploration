@@ -5,6 +5,8 @@ import java.io.IOException;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.logging.HttpLoggingInterceptor;
+import okhttp3.logging.HttpLoggingInterceptor.Level;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -27,10 +29,22 @@ public abstract class Manager {
 		}
 	}
 
+	private static final class StandardOutLogger implements HttpLoggingInterceptor.Logger {
+		@Override
+		public void log(final String message) {
+			System.out.println(message);
+		}
+	}
+
 	/**
 	 * The base URL of all network calls.
 	 */
 	private static final String BASE_URL = "http://challenge2.airtime.com:10001";
+
+	/**
+	 * The level at which to log HTTP requests and responses.
+	 */
+	private static final HttpLoggingInterceptor.Level LEVEL = Level.NONE;
 
 	/**
 	 * The properly configured instance of {@link Retrofit} to use to generate network call
@@ -48,6 +62,14 @@ public abstract class Manager {
 		retrofitBuilder.baseUrl(Manager.BASE_URL);
 
 		final OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder();
+		final StandardOutLogger standardOutLogger = new StandardOutLogger();
+		final HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(
+				standardOutLogger);
+
+		httpLoggingInterceptor.setLevel(Manager.LEVEL);
+
+		okHttpClientBuilder.addInterceptor(httpLoggingInterceptor);
+
 		final HeaderInterceptor headerInterceptor = new HeaderInterceptor();
 
 		okHttpClientBuilder.addInterceptor(headerInterceptor);
