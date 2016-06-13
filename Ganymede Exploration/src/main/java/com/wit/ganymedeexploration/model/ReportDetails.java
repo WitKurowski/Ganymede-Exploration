@@ -1,4 +1,4 @@
-package com.wit.model;
+package com.wit.ganymedeexploration.model;
 
 import com.google.gson.annotations.SerializedName;
 

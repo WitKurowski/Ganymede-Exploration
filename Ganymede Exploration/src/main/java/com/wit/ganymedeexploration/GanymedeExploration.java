@@ -1,4 +1,4 @@
-package com.wit;
+package com.wit.ganymedeexploration;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,16 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.wit.exception.ServerException;
-import com.wit.model.CommandResult;
-import com.wit.model.Drone;
-import com.wit.model.ReportDetails;
-import com.wit.model.ReportResponse;
-import com.wit.model.Room;
-import com.wit.model.command.CommandContents;
-import com.wit.model.command.ExploreCommandContents;
-import com.wit.model.command.ReadCommandContents;
-import com.wit.service.ExplorationManager;
+import com.wit.ganymedeexploration.exception.ServerException;
+import com.wit.ganymedeexploration.model.CommandResult;
+import com.wit.ganymedeexploration.model.Drone;
+import com.wit.ganymedeexploration.model.ReportDetails;
+import com.wit.ganymedeexploration.model.ReportResponse;
+import com.wit.ganymedeexploration.model.Room;
+import com.wit.ganymedeexploration.model.command.CommandContents;
+import com.wit.ganymedeexploration.model.command.ExploreCommandContents;
+import com.wit.ganymedeexploration.model.command.ReadCommandContents;
+import com.wit.ganymedeexploration.service.ExplorationManager;
 
 /**
  * The core class where the exploration is managed.

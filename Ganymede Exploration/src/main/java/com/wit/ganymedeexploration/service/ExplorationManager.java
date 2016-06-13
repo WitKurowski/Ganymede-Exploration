@@ -1,15 +1,15 @@
-package com.wit.service;
+package com.wit.ganymedeexploration.service;
 
 import java.io.IOException;
 import java.util.Map;
 
-import com.wit.exception.ServerException;
-import com.wit.model.CommandResult;
-import com.wit.model.Drone;
-import com.wit.model.ReportDetails;
-import com.wit.model.ReportResponse;
-import com.wit.model.Room;
-import com.wit.model.command.CommandContents;
+import com.wit.ganymedeexploration.exception.ServerException;
+import com.wit.ganymedeexploration.model.CommandResult;
+import com.wit.ganymedeexploration.model.Drone;
+import com.wit.ganymedeexploration.model.ReportDetails;
+import com.wit.ganymedeexploration.model.ReportResponse;
+import com.wit.ganymedeexploration.model.Room;
+import com.wit.ganymedeexploration.model.command.CommandContents;
 
 import retrofit2.Call;
 import retrofit2.Response;

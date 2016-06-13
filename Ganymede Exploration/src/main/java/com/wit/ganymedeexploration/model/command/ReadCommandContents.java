@@ -1,7 +1,7 @@
-package com.wit.model.command;
+package com.wit.ganymedeexploration.model.command;
 
 import com.google.gson.annotations.SerializedName;
-import com.wit.model.Room;
+import com.wit.ganymedeexploration.model.Room;
 
 /**
  * The contents sent along as part of a drone "read" command.

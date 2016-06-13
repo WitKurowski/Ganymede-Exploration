@@ -1,4 +1,4 @@
-package com.wit.exception;
+package com.wit.ganymedeexploration.exception;
 
 /**
  * Reflects an error returned from the server.

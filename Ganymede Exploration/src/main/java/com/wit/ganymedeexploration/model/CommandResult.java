@@ -1,4 +1,4 @@
-package com.wit.model;
+package com.wit.ganymedeexploration.model;
 
 import java.util.List;
 

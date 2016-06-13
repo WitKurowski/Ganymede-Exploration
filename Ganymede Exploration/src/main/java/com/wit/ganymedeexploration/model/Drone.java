@@ -1,12 +1,12 @@
-package com.wit.model;
+package com.wit.ganymedeexploration.model;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.wit.exception.ServerException;
-import com.wit.model.command.CommandContents;
-import com.wit.service.ExplorationManager;
+import com.wit.ganymedeexploration.exception.ServerException;
+import com.wit.ganymedeexploration.model.command.CommandContents;
+import com.wit.ganymedeexploration.service.ExplorationManager;
 
 /**
  * An unmanned aerial vehicle used for exploration.
@@ -148,7 +148,7 @@ public class Drone {
 
 	/**
 	 * Creates a new {@link Drone}.
-	 * 
+	 *
 	 * @param id
 	 *            The ID of this {@link Drone}.
 	 */
@@ -165,7 +165,7 @@ public class Drone {
 
 	/**
 	 * Executes the given commands.
-	 * 
+	 *
 	 * @param commandIdCommandContents
 	 *            The unique command IDs and their associated contents.
 	 */
@@ -195,7 +195,7 @@ public class Drone {
 
 	/**
 	 * Returns the unique command IDs and their associated results.
-	 * 
+	 *
 	 * @return The unique command IDs and their associated results.
 	 */
 	public Map<String, CommandResult> getCommandIdCommandResults() {
@@ -204,7 +204,7 @@ public class Drone {
 
 	/**
 	 * Returns the ID of this {@link Drone}.
-	 * 
+	 *
 	 * @return The ID of this {@link Drone}.
 	 */
 	public String getId() {
@@ -213,7 +213,7 @@ public class Drone {
 
 	/**
 	 * Returns whether this {@link Drone} is currently executing commands.
-	 * 
+	 *
 	 * @return Whether this {@link Drone} is currently executing commands.
 	 */
 	public boolean isRunning() {
@@ -223,7 +223,7 @@ public class Drone {
 	/**
 	 * Sets the listener used to listen to the completion of execution of the latest batch of
 	 * commands.
-	 * 
+	 *
 	 * @param onCommandsCompletedListener
 	 *            The listener used to listen to the completion of execution of the latest batch of
 	 *            commands.
@@ -235,7 +235,7 @@ public class Drone {
 
 	/**
 	 * Sets whether this {@link Drone} is currently executing commands.
-	 * 
+	 *
 	 * @param running
 	 *            Whether this {@link Drone} is currently executing commands.
 	 */

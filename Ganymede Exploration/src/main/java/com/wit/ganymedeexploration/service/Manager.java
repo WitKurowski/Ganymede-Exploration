@@ -1,4 +1,4 @@
-package com.wit.service;
+package com.wit.ganymedeexploration.service;
 
 import java.io.IOException;
 
