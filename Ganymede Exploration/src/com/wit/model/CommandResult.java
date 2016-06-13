@@ -11,7 +11,7 @@ public class CommandResult {
 	/**
 	 * The IDs of the {@link Room}s that are connected to the explored {@link Room}.
 	 */
-	@SerializedName("connectedRooms")
+	@SerializedName("connections")
 	private List<String> connectedRoomIds;
 
 	/**
@@ -35,7 +35,7 @@ public class CommandResult {
 
 	/**
 	 * Returns the IDs of the {@link Room}s that are connected to the explored {@link Room}.
-	 * 
+	 *
 	 * @return The IDs of the {@link Room}s that are connected to the explored {@link Room}.
 	 */
 	public List<String> getConnectedRoomIds() {
@@ -44,7 +44,7 @@ public class CommandResult {
 
 	/**
 	 * Returns a description of the error encountered when attempting to execute the command.
-	 * 
+	 *
 	 * @return A description of the error encountered when attempting to execute the command.
 	 */
 	public String getError() {
@@ -54,7 +54,7 @@ public class CommandResult {
 	/**
 	 * Returns the order of the writing found within a {@link Room}, or -1 if no meaningful writing
 	 * was found.
-	 * 
+	 *
 	 * @return The order of the writing found within a {@link Room}, or -1 if no meaningful writing
 	 *         was found.
 	 */
@@ -64,7 +64,7 @@ public class CommandResult {
 
 	/**
 	 * Returns the writing found within a {@link Room}, if any.
-	 * 
+	 *
 	 * @return The writing found within a {@link Room}, if any.
 	 */
 	public String getWriting() {
