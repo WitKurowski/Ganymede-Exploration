@@ -6,6 +6,8 @@ import java.util.Map;
 import com.wit.exception.ServerException;
 import com.wit.model.CommandResult;
 import com.wit.model.Drone;
+import com.wit.model.ReportDetails;
+import com.wit.model.ReportResponse;
 import com.wit.model.Room;
 import com.wit.model.command.CommandContents;
 
@@ -27,6 +29,9 @@ public class ExplorationManager extends Manager {
 
 		@GET("/start")
 		Call<Room> get();
+
+		@POST("/report")
+		Call<ReportResponse> report(@Body ReportDetails reportDetails);
 	}
 
 	/**
@@ -95,6 +100,33 @@ public class ExplorationManager extends Manager {
 		}
 
 		return commandIdCommandResults;
+	}
+
+	/**
+	 * Sends the {@link ReportDetails} uncovered as part of the exploration.
+	 *
+	 * @return The {@link ReportResponse} received.
+	 * @throws IOException
+	 *             A network error occurred.
+	 * @throws ServerException
+	 *             The server returned an error.
+	 */
+	public ReportResponse report(final ReportDetails reportDetails)
+			throws IOException, ServerException {
+		final Call<ReportResponse> call = this.explorationManagerRetrofitCore.report(reportDetails);
+		final Response<ReportResponse> response = call.execute();
+		final boolean successful = response.isSuccessful();
+		final ReportResponse reportResponse;
+
+		if (successful) {
+			reportResponse = response.body();
+		} else {
+			final String message = response.message();
+
+			throw new ServerException(message);
+		}
+
+		return reportResponse;
 	}
 
 	/**

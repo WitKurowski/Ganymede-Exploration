@@ -3,6 +3,7 @@ package com.wit;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,8 @@ import java.util.UUID;
 import com.wit.exception.ServerException;
 import com.wit.model.CommandResult;
 import com.wit.model.Drone;
+import com.wit.model.ReportDetails;
+import com.wit.model.ReportResponse;
 import com.wit.model.Room;
 import com.wit.model.command.CommandContents;
 import com.wit.model.command.ExploreCommandContents;
@@ -38,7 +41,7 @@ public class GanymedeExploration {
 
 		/**
 		 * Creates a new {@link DroneOnCommandsCompletedListener}.
-		 * 
+		 *
 		 * @param drone
 		 *            The {@link Drone} that we are waiting on the completion for.
 		 * @param state
@@ -115,7 +118,7 @@ public class GanymedeExploration {
 	public static void main(final String[] args) {
 		final GanymedeExploration ganymedeExploration = new GanymedeExploration();
 
-		ganymedeExploration.performExploration();
+		ganymedeExploration.execute();
 	}
 
 	/**
@@ -124,146 +127,40 @@ public class GanymedeExploration {
 	private final State state = new State();
 
 	/**
+	 * Decode the message uncovered through the writings.
+	 *
+	 * @return The decoded message.
+	 */
+	private String decodeMessage() {
+		final List<Integer> indices = new ArrayList<>(this.state.indexedWritings.keySet());
+
+		Collections.sort(indices);
+
+		final StringBuilder messageStringBuilder = new StringBuilder();
+
+		for (final Integer index : indices) {
+			final String writing = this.state.indexedWritings.get(index);
+
+			messageStringBuilder.append(writing);
+		}
+
+		final String message = messageStringBuilder.toString();
+
+		return message;
+	}
+
+	/**
 	 * Performs the exploration from start to finish.
 	 */
-	public void performExploration() {
-		final ExplorationManager mainService = ExplorationManager.getInstance();
-
+	public void execute() {
 		try {
-			final Room startingRoom = mainService.start();
-			final String roomId = startingRoom.getId();
+			this.initializeExploration();
+			this.performExploration();
 
-			System.out.println("Room ID: " + roomId);
+			final String message = this.decodeMessage();
+			final String responseMessage = this.reportMessage(message);
 
-			this.state.unexploredRoomIds.add(roomId);
-			this.state.unreadRoomIds.add(roomId);
-
-			final List<String> droneIds = startingRoom.getDroneIds();
-
-			System.out.println("Drone IDs: " + droneIds);
-
-			for (final String droneId : droneIds) {
-				final Drone drone = new Drone(droneId);
-				final DroneOnCommandsCompletedListener droneOnCommandsCompletedListener = new DroneOnCommandsCompletedListener(
-						drone, this.state);
-
-				drone.setOnCommandsCompletedListener(droneOnCommandsCompletedListener);
-
-				this.state.availableDrones.add(drone);
-			}
-
-			synchronized (this) {
-				while (!this.state.unexploredRoomIds.isEmpty()
-						|| !this.state.unreadRoomIds.isEmpty() || !this.state.busyDrones.isEmpty()
-						|| !this.state.pendingDrones.isEmpty()) {
-					final boolean pendingDronesExist = !this.state.pendingDrones.isEmpty();
-
-					if (pendingDronesExist) {
-						for (final Drone pendingDrone : this.state.pendingDrones) {
-							final Map<String, CommandResult> commandIdCommandResults = pendingDrone
-									.getCommandIdCommandResults();
-							final Collection<CommandResult> commandResults = commandIdCommandResults
-									.values();
-
-							for (final CommandResult commandResult : commandResults) {
-								final List<String> connectedRoomIds = commandResult
-										.getConnectedRoomIds();
-								final Integer order = commandResult.getOrder();
-
-								if ((connectedRoomIds == null) && (order == null)) {
-									final String error = commandResult.getError();
-									final String message = String.format(
-											"Failed to execute command \"%s\": %s", commandResult,
-											error);
-
-									throw new ServerException(message);
-								} else {
-									if (connectedRoomIds != null) {
-										for (final String connectedRoomId : connectedRoomIds) {
-											if (!this.state.exploredRoomIds
-													.contains(connectedRoomId)) {
-												this.state.unexploredRoomIds.add(connectedRoomId);
-											}
-
-											if (!this.state.readRoomIds.contains(connectedRoomId)) {
-												this.state.unreadRoomIds.add(connectedRoomId);
-											}
-										}
-									}
-
-									if ((order != null) && (order != -1)) {
-										final String writing = commandResult.getWriting();
-										this.state.indexedWritings.put(order, writing);
-									}
-								}
-							}
-						}
-
-						this.state.availableDrones.addAll(this.state.pendingDrones);
-						this.state.pendingDrones.clear();
-					}
-
-					final boolean availableDronesExist = !this.state.availableDrones.isEmpty();
-					final boolean unexploredRoomsExist = !this.state.unexploredRoomIds.isEmpty();
-					final boolean unreadRoomsExist = !this.state.unreadRoomIds.isEmpty();
-
-					if (availableDronesExist && (unexploredRoomsExist || unreadRoomsExist)) {
-						for (final Drone availableDrone : new ArrayList<>(
-								this.state.availableDrones)) {
-							final Map<String, CommandContents> commandIdCommandContents = new HashMap<>();
-
-							for (final String unreadRoomId : new ArrayList<>(
-									this.state.unreadRoomIds)) {
-								if (commandIdCommandContents
-										.size() == ExplorationManager.MAXIMUM_COMMAND_BATCH_SIZE) {
-									break;
-								} else {
-									final String commandId = UUID.randomUUID().toString();
-									final CommandContents commandContents = new ReadCommandContents(
-											unreadRoomId);
-
-									commandIdCommandContents.put(commandId, commandContents);
-
-									this.state.unreadRoomIds.remove(unreadRoomId);
-									this.state.readRoomIds.add(unreadRoomId);
-								}
-							}
-
-							for (final String unexploredRoomId : new ArrayList<>(
-									this.state.unexploredRoomIds)) {
-								if (commandIdCommandContents
-										.size() == ExplorationManager.MAXIMUM_COMMAND_BATCH_SIZE) {
-									break;
-								} else {
-									final String commandId = UUID.randomUUID().toString();
-									final CommandContents commandContents = new ExploreCommandContents(
-											unexploredRoomId);
-
-									commandIdCommandContents.put(commandId, commandContents);
-
-									this.state.unexploredRoomIds.remove(unexploredRoomId);
-									this.state.exploredRoomIds.add(unexploredRoomId);
-								}
-							}
-
-							if (commandIdCommandContents.size() > 0) {
-								this.state.availableDrones.remove(availableDrone);
-								this.state.busyDrones.add(availableDrone);
-
-								availableDrone.execute(commandIdCommandContents);
-							}
-						}
-					} else {
-						final boolean busyDronesExist = !this.state.busyDrones.isEmpty();
-
-						if (busyDronesExist) {
-							this.wait();
-						}
-					}
-				}
-			}
-
-			System.out.println(this.state.indexedWritings);
+			System.out.println(responseMessage);
 		} catch (final IOException ioException) {
 			ioException.printStackTrace();
 		} catch (final ServerException serverException) {
@@ -271,5 +168,173 @@ public class GanymedeExploration {
 		} catch (final InterruptedException interruptedException) {
 			interruptedException.printStackTrace();
 		}
+	}
+
+	/**
+	 * Start the exploration process.
+	 *
+	 * @throws IOException
+	 *             A network error occurred.
+	 * @throws ServerException
+	 *             The server returned an error.
+	 */
+	private void initializeExploration() throws IOException, ServerException {
+		final ExplorationManager explorationManager = ExplorationManager.getInstance();
+		final Room startingRoom = explorationManager.start();
+		final String roomId = startingRoom.getId();
+
+		this.state.unexploredRoomIds.add(roomId);
+		this.state.unreadRoomIds.add(roomId);
+
+		final List<String> droneIds = startingRoom.getDroneIds();
+
+		for (final String droneId : droneIds) {
+			final Drone drone = new Drone(droneId);
+			final DroneOnCommandsCompletedListener droneOnCommandsCompletedListener = new DroneOnCommandsCompletedListener(
+					drone, this.state);
+
+			drone.setOnCommandsCompletedListener(droneOnCommandsCompletedListener);
+
+			this.state.availableDrones.add(drone);
+		}
+	}
+
+	/**
+	 * Performs the exploration by sending commands to the available {@link Drone}s and compiling
+	 * the data they find.
+	 * 
+	 * @throws ServerException
+	 *             At least one command failed to be executed by a {@link Drone}.
+	 * @throws InterruptedException
+	 *             Failed to asynchronously wait for {@link Drone}s to finish their work.
+	 */
+	private void performExploration() throws ServerException, InterruptedException {
+		synchronized (this) {
+			while (!this.state.unexploredRoomIds.isEmpty() || !this.state.unreadRoomIds.isEmpty()
+					|| !this.state.busyDrones.isEmpty() || !this.state.pendingDrones.isEmpty()) {
+				final boolean pendingDronesExist = !this.state.pendingDrones.isEmpty();
+
+				if (pendingDronesExist) {
+					for (final Drone pendingDrone : this.state.pendingDrones) {
+						final Map<String, CommandResult> commandIdCommandResults = pendingDrone
+								.getCommandIdCommandResults();
+						final Collection<CommandResult> commandResults = commandIdCommandResults
+								.values();
+
+						for (final CommandResult commandResult : commandResults) {
+							final List<String> connectedRoomIds = commandResult
+									.getConnectedRoomIds();
+							final Integer order = commandResult.getOrder();
+
+							if ((connectedRoomIds == null) && (order == null)) {
+								final String error = commandResult.getError();
+								final String message = String.format(
+										"Failed to execute command \"%s\": %s", commandResult,
+										error);
+
+								throw new ServerException(message);
+							} else {
+								if (connectedRoomIds != null) {
+									for (final String connectedRoomId : connectedRoomIds) {
+										if (!this.state.exploredRoomIds.contains(connectedRoomId)) {
+											this.state.unexploredRoomIds.add(connectedRoomId);
+										}
+
+										if (!this.state.readRoomIds.contains(connectedRoomId)) {
+											this.state.unreadRoomIds.add(connectedRoomId);
+										}
+									}
+								}
+
+								if ((order != null) && (order != -1)) {
+									final String writing = commandResult.getWriting();
+									this.state.indexedWritings.put(order, writing);
+								}
+							}
+						}
+					}
+
+					this.state.availableDrones.addAll(this.state.pendingDrones);
+					this.state.pendingDrones.clear();
+				}
+
+				final boolean availableDronesExist = !this.state.availableDrones.isEmpty();
+				final boolean unexploredRoomsExist = !this.state.unexploredRoomIds.isEmpty();
+				final boolean unreadRoomsExist = !this.state.unreadRoomIds.isEmpty();
+
+				if (availableDronesExist && (unexploredRoomsExist || unreadRoomsExist)) {
+					for (final Drone availableDrone : new ArrayList<>(this.state.availableDrones)) {
+						final Map<String, CommandContents> commandIdCommandContents = new HashMap<>();
+
+						for (final String unreadRoomId : new ArrayList<>(
+								this.state.unreadRoomIds)) {
+							if (commandIdCommandContents
+									.size() == ExplorationManager.MAXIMUM_COMMAND_BATCH_SIZE) {
+								break;
+							} else {
+								final String commandId = UUID.randomUUID().toString();
+								final CommandContents commandContents = new ReadCommandContents(
+										unreadRoomId);
+
+								commandIdCommandContents.put(commandId, commandContents);
+
+								this.state.unreadRoomIds.remove(unreadRoomId);
+								this.state.readRoomIds.add(unreadRoomId);
+							}
+						}
+
+						for (final String unexploredRoomId : new ArrayList<>(
+								this.state.unexploredRoomIds)) {
+							if (commandIdCommandContents
+									.size() == ExplorationManager.MAXIMUM_COMMAND_BATCH_SIZE) {
+								break;
+							} else {
+								final String commandId = UUID.randomUUID().toString();
+								final CommandContents commandContents = new ExploreCommandContents(
+										unexploredRoomId);
+
+								commandIdCommandContents.put(commandId, commandContents);
+
+								this.state.unexploredRoomIds.remove(unexploredRoomId);
+								this.state.exploredRoomIds.add(unexploredRoomId);
+							}
+						}
+
+						if (commandIdCommandContents.size() > 0) {
+							this.state.availableDrones.remove(availableDrone);
+							this.state.busyDrones.add(availableDrone);
+
+							availableDrone.execute(commandIdCommandContents);
+						}
+					}
+				} else {
+					final boolean busyDronesExist = !this.state.busyDrones.isEmpty();
+
+					if (busyDronesExist) {
+						this.wait();
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Reports a message.
+	 *
+	 * @param message
+	 *            The message to report back.
+	 * @return The message sent back as a response.
+	 * @throws IOException
+	 *             A network error occurred.
+	 * @throws ServerException
+	 *             The server returned an error.
+	 */
+	private String reportMessage(final String message) throws IOException, ServerException {
+		final ExplorationManager explorationManager = ExplorationManager.getInstance();
+		final ReportDetails reportDetails = new ReportDetails(message);
+		final ReportResponse reportResponse = explorationManager.report(reportDetails);
+		final String responseMessage = reportResponse.getMessage();
+
+		return responseMessage;
 	}
 }
