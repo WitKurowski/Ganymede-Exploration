@@ -20,7 +20,7 @@ public abstract class Manager {
 			final Request originalRequest = chain.request();
 			final Request.Builder newRequestBuilder = originalRequest.newBuilder();
 
-			newRequestBuilder.addHeader("x-commander-email", "witkurowski@gmail.com");
+			newRequestBuilder.addHeader(Manager.EMAIL_HEADER_KEY, Manager.EMAIL_HEADER_VALUE);
 
 			final Request newRequest = newRequestBuilder.build();
 			final okhttp3.Response response = chain.proceed(newRequest);
@@ -40,6 +40,16 @@ public abstract class Manager {
 	 * The base URL of all network calls.
 	 */
 	private static final String BASE_URL = "http://challenge2.airtime.com:10001";
+
+	/**
+	 * The key to use in the header for identification.
+	 */
+	public static final String EMAIL_HEADER_KEY = "x-commander-email";
+
+	/**
+	 * The value to use in the header for identification.
+	 */
+	public static final String EMAIL_HEADER_VALUE = "witkurowski@gmail.com";
 
 	/**
 	 * The level at which to log HTTP requests and responses.
